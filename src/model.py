@@ -160,19 +160,17 @@ class DRIT(nn.Module):
     # get reconstructed encoded z_c
     self.z_content_recon_b = self.enc_c.forward_b(self.fake_B_encoded)
 
-    # # get reconstructed encoded z_a
-    # if self.concat:
-    #   self.mu_recon_b, self.logvar_recon_b = self.enc_a.forward_b(self.fake_B_encoded)
-    #   std_b = self.logvar_recon_b.mul(0.5).exp_()
-    #   eps_b = self.get_z_random(std_b.size(0), std_b.size(1), 'gauss')
-    #   self.z_attr_recon_b = eps_b.mul(std_b).add_(self.mu_recon_b)
-    # else:
-    #   self.z_attr_recon_b = self.enc_a.forward_b(self.fake_B_encoded)
+    # get reconstructed encoded z_a - to "put more weight" on share space
+    if self.concat:
+      self.mu_recon_a, self.logvar_recon_a = self.enc_a.forward_a(self.fake_AA_encoded)
+      std_a = self.logvar_recon_a.mul(0.5).exp_()
+      eps_a = self.get_z_random(std_a.size(0), std_a.size(1), 'gauss')
+      self.z_attr_recon_a = eps_a.mul(std_a).add_(self.mu_recon_a)
+    else:
+      self.z_attr_recon_a = self.enc_a.forward_a(self.fake_AA_encoded)
 
     # second cross translation
-    # TODO: if i reconstruct A attributes from the self reconstructed image (fake_AA_encoded) would it be a stronger
-    # TODO: constraint?
-    self.fake_A_recon = self.gen.forward_a(self.z_content_recon_b, self.z_attr_a)
+    self.fake_A_recon = self.gen.forward_a(self.z_content_recon_b, self.z_attr_recon_a)
     # TODO: need to explain to myself why it should construct B? because fake_B was constructed from attributes
     # TODO: different from the original B
     #self.fake_B_recon = self.gen.forward_b(self.z_content_recon_b, self.z_attr_recon_b)
