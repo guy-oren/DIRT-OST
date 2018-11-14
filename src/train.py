@@ -55,6 +55,9 @@ def main():
       if not opts.no_display_img:
         saver.write_display(total_it, model)
 
+      # save result image
+      saver.write_img(total_it, model)
+
       print('total_it: %d (ep %d, it %d), lr %08f' % (total_it, ep, it, model.gen_opt.param_groups[0]['lr']))
       total_it += 1
       if total_it >= max_it:
@@ -65,9 +68,6 @@ def main():
     # decay learning rate
     if opts.n_ep_decay > -1:
       model.update_lr()
-
-    # save result image
-    saver.write_img(ep, model)
 
     # Save network weights
     saver.write_model(ep, total_it, model)

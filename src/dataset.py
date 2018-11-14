@@ -3,6 +3,8 @@ import torch.utils.data as data
 from PIL import Image
 from torchvision.transforms import Compose, Resize, RandomCrop, CenterCrop, RandomHorizontalFlip, ToTensor, Normalize
 import random
+import numpy as np
+
 
 class dataset_single(data.Dataset):
   def __init__(self, opts, setname, input_dim):
@@ -42,7 +44,11 @@ class dataset_unpair(data.Dataset):
 
     # A
     images_A = os.listdir(os.path.join(self.dataroot, opts.phase + 'A'))
+
     self.A = [os.path.join(self.dataroot, opts.phase + 'A', x) for x in images_A]
+
+    if opts.source_max_items != -1 and opts.source_max_items <= len(self.A):
+      self.A = np.random.choice(self.A, opts.source_max_items, replace=False)
 
     # B
     images_B = os.listdir(os.path.join(self.dataroot, opts.phase + 'B'))
@@ -56,10 +62,11 @@ class dataset_unpair(data.Dataset):
 
     # setup image transformation
     transforms = [Resize((opts.resize_size, opts.resize_size), Image.BICUBIC)]
-    if opts.phase == 'train':
-      transforms.append(RandomCrop(opts.crop_size))
-    else:
-      transforms.append(CenterCrop(opts.crop_size))
+    if opts.crop_size != -1:
+      if opts.phase == 'train':
+        transforms.append(RandomCrop(opts.crop_size))
+      else:
+        transforms.append(CenterCrop(opts.crop_size))
     if not opts.no_flip:
       transforms.append(RandomHorizontalFlip())
     transforms.append(ToTensor())
